@@ -35,6 +35,10 @@
         "valclient":{
             "server":"localhost",
             "port": 23335
+        },
+        "clientapival":{
+            "server":"localhost",
+            "port": 23334
         }
     }
 }
