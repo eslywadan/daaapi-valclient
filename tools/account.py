@@ -4,35 +4,9 @@ import pandas as pd
 from dbtools.sql_buffer import SqlBuffer
 from tools.redis_db import RedisDb
 from datetime import datetime
+from tools.logger import Logger
 
 
-def check_client_id_password(client_id, password):
-    info = get_client_info(client_id)
-    # info = client_info(client_id)
-    if len(info.password) > 0:
-        #password_correct = df["PASSWORD"].values[0]
-        #type = df["TYPE"].values[0]        
-        #expiry = df["EXPIRY"].values[0]        
-        #permission = df["PERMISSION"].values[0]
-        password_correct = info.password
-        type = int(info.type)
-        expiry = info.expiry
-        permission = info.permission
-        
-        check_ok = (password_correct == crypto.crypto_password(type, password))
-
-        if check_ok:
-            today = datetime.today().strftime("%Y-%m-%d")
-            check_ok = expiry > today
-
-        if check_ok:
-            token = crypto.get_account_token(client_id)
-            redis = RedisDb.default()
-            redis.set(token, f"{client_id}:{permission}", expiry_hours=24)
-            return token
-
-
-    return None
 
 def get_client_info(client_id):
     sql = '''
@@ -45,4 +19,52 @@ def get_client_info(client_id):
     info = df.to_dict()
     
     return info
+
+
+def check_client_id_password(client_id, password):
+
+    info = get_client_info(client_id)
+    
+    if len(info["PASSWORD"]) > 0:
+        Logger.log(f'2.Client info: {info}')
+        password_correct = info["PASSWORD"][0]
+        type = int(info["TYPE"][0])
+        expiry = info["EXPIRY"][0]
+        permission = info["PERMISSION"][0]
+        
+        check_ok = (password_correct == crypto.crypto_password(type, password))
+        Logger.log(f'check_ok 1: {check_ok}')
+
+        if check_ok:
+            today = datetime.today().strftime("%Y-%m-%d")
+            check_ok = expiry > today
+            Logger.log(f'check_ok 2: {check_ok}')
+
+        if check_ok:
+            token = crypto.get_account_token(client_id)
+            redis = RedisDb.default()
+            redis.set(token, f"{client_id}:{permission}", expiry_hours=24)
+            client_api_key = {"clientid":client_id,"apikey":token,"expiry":24}
+            Logger.log(f'check_ok 3: {check_ok}')
+            return client_api_key
+
+    return None
+
+
+def check_and_log(token=None):
+
+    if token is not None:
+        redis = RedisDb.default()
+        client_info = redis.get(token)
+    if client_info is not None:
+        client_id = client_info[0:client_info.index(":")]
+        permission = client_info[client_info.index(":")+1:]
+        if permission:
+            permission_list = permission.split("|")
+            if "QUERY" in permission_list:
+                Logger.log(f'Issue request: @{client_id} {token}')
+                return True
+
+    Logger.log(f'Deny request: {token}')
+    return False
 
