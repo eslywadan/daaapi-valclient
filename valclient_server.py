@@ -15,7 +15,7 @@ valclient_port = ConfigLoader.config("grpc")["valclient"]["port"]
 
 SERVER_ADDRESS = "%s:%s" %(valclient_server,valclient_port)
 
-class ValClient(valclient_pb2_grpc.ValclientServicer):
+class ValClientServicer(valclient_pb2_grpc.ValclientServicer):
 
     def ElaborDetail(self, request, context):
       print("ElaborDetail called by client(%s)" %(request.client_id))
@@ -44,7 +44,7 @@ class ValClient(valclient_pb2_grpc.ValclientServicer):
 def main():
     server = grpc.server(futures.ThreadPoolExecutor())
 
-    valclient_pb2_grpc.add_ValclientServicer_to_server(ValClient(),server)
+    valclient_pb2_grpc.add_ValclientServicer_to_server(ValClientServicer(),server)
 
     server.add_insecure_port(SERVER_ADDRESS)
     print("---------------Start Python Client Auth Server----------------------------------")

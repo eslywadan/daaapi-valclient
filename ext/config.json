@@ -34,9 +34,13 @@
     "grpc":{
         "valclient":{
             "server":"localhost",
-            "port": 23335
+            "port": 23334
         },
         "clientapival":{
+            "server":"localhost",
+            "port": 23334
+        },
+        "hybrid":{
             "server":"localhost",
             "port": 23334
         }

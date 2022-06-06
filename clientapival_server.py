@@ -92,7 +92,7 @@ def valclientserver():
     server.wait_for_termination()
 
 
-class TmpValClientSvr():
+class GrpcSvr():
     def __init__(cls):
         cls.server = grpc.server(futures.ThreadPoolExecutor())
 
@@ -102,6 +102,10 @@ class TmpValClientSvr():
         print("---------------Start Python Client Auth Server----------------------------------")
         cls.server.start()
         print("ClientAPIValServicer.clientinfo listen on server(%s)" %(SERVER_ADDRESS))
+
+    def stop(cls):
+        grace = True
+        cls.server.stop(grace)
 
 
 if __name__ == '__main__':
