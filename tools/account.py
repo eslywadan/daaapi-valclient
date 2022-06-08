@@ -10,7 +10,7 @@ from tools.logger import Logger
 
 def get_client_info(client_id):
     sql = '''
-    SELECT CLIENT_ID, PASSWORD, TYPE, EXPIRY, PERMISSION 
+    SELECT CLIENT_ID, PASSWORD, TYPE, EXPIRY, PERMISSION, REGISTRY 
       FROM ACCOUNT'''
     buf = SqlBuffer(sql).add("CLIENT_ID", client_id)
     cn = DbConnection.default()
@@ -31,6 +31,7 @@ def check_client_id_password(client_id, password):
         type = int(info["TYPE"][0])
         expiry = info["EXPIRY"][0]
         permission = info["PERMISSION"][0]
+        registry = info["REGISTRY"][0]
         
         check_ok = (password_correct == crypto.crypto_password(type, password))
         Logger.log(f'check_ok 1: {check_ok}')
@@ -43,7 +44,7 @@ def check_client_id_password(client_id, password):
         if check_ok:
             token = crypto.get_account_token(client_id)
             redis = RedisDb.default()
-            redis.set(token, f"{client_id}:{permission}", expiry_hours=24)
+            redis.set(token, f"{client_id}:{permission}:{registry}", expiry_hours=24)
             client_api_key = {"clientid":client_id,"apikey":token,"expiry":24}
             Logger.log(f'check_ok 3: {check_ok}')
             return client_api_key
@@ -57,13 +58,14 @@ def check_and_log(token=None):
         redis = RedisDb.default()
         client_info = redis.get(token)
     if client_info is not None:
-        client_id = client_info[0:client_info.index(":")]
-        permission = client_info[client_info.index(":")+1:]
+        client_id = client_info.split(":")[0]
+        permission = client_info.split(":")[1]
+        registry = client_info.split(":")[2]
         if permission:
             permission_list = permission.split("|")
             if "QUERY" in permission_list:
-                Logger.log(f'Issue request: @{client_id} {token}')
-                return True
+                Logger.log(f'Issue request: @{client_id} {token} {registry}')
+                return client_info
 
     Logger.log(f'Deny request: {token}')
     return False

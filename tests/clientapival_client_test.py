@@ -9,12 +9,13 @@ def test_clientapival_client():
 
     apikey = get_clientapikey("mfg","mfg")
     token = apikey.apikey
-    assert token is not None
+    verifiedresult = get_verified_apikey(token)
+    assert verifiedresult.assertion == "mfg:QUERY:/mfg"
 
-    apikey = get_clientapikey("mfg","mfg")
+    apikey = get_clientapikey("eng","eng")
     token = apikey.apikey
     verifiedresult = get_verified_apikey(token)
-    assert verifiedresult
+    assert verifiedresult.assertion ==  "eng:QUERY:/eng"
     
     del grpcsvr
 
