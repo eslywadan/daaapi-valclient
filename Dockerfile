@@ -8,5 +8,5 @@ RUN pip install -r requirements.txt
 EXPOSE 23335
 COPY . .
 WORKDIR /service
-ENTRYPOINT [ "python", "valclient_server.py"]
+ENTRYPOINT [ "python", "hybride_server.py"]
 
